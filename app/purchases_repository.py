@@ -1,10 +1,10 @@
-from attrs import define
+from pydantic import BaseModel
 
 
-@define
-class Purchase:
+class Purchase(BaseModel):
     user_id: int = 0
     flower_id: int = 0
+
 
 
 class PurchasesRepository:
@@ -13,6 +13,5 @@ class PurchasesRepository:
     def __init__(self):
         self.purchases = []
 
-    # необходимые методы сюда
-
-    # конец решения
+    def save(self,purchases):
+        self.purchases.append(purchases)
