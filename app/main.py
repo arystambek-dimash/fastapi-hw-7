@@ -75,7 +75,7 @@ def flowers_post(name: str = Form(...), count: int = Form(...), cost: float = Fo
 @app.get("/cart/items")
 def cart_items_get(request: Request, token: str = Depends(oauth2_scheme)):
     user_cart = request.cookies.get(token)
-    if not json.loads(user_cart):
+    if not user_cart:
         return {"message":"The cart is empty"}
     flowers = []
     new_user_cart = user_cart.replace('[', '').replace(']', '')
@@ -106,6 +106,8 @@ def cart_items_post(flower_id: int = Form(...), token: str = Depends(oauth2_sche
 @app.post("/purchases")
 def purchases(request: Request, flower_id: str = Form(), token: str = Depends(oauth2_scheme)):
     user_cart = request.cookies.get(token)
+    if not json.loads(user_cart):
+        return {"message":"The cart is empty"}
     flowers = []
     new_user_cart = user_cart.replace('[', '').replace(']', '')
     new_user_cart = new_user_cart.split(",")
@@ -131,4 +133,9 @@ def purchases(request: Request, flower_id: str = Form(), token: str = Depends(oa
 
 @app.get("/purchases")
 def purchases():
-    return purchases_repository.get_all()
+    flowers_purchases = []
+    for p in purchases_repository.get_all():
+        flower = flowers_repository.get_by_id(p)
+        flowers_purchases.append({"Name: " : flower.name,"Cost: ": flower.cost})
+
+    return flowers_purchases
