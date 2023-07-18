@@ -15,3 +15,5 @@ class PurchasesRepository:
 
     def save(self,purchases):
         self.purchases.append(purchases)
+    def get_all(self):
+        return self.purchases

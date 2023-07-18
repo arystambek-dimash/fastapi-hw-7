@@ -75,6 +75,8 @@ def flowers_post(name: str = Form(...), count: int = Form(...), cost: float = Fo
 @app.get("/cart/items")
 def cart_items_get(request: Request, token: str = Depends(oauth2_scheme)):
     user_cart = request.cookies.get(token)
+    if not json.loads(user_cart):
+        return {"message":"The cart is empty"}
     flowers = []
     new_user_cart = user_cart.replace('[', '').replace(']', '')
     new_user_cart = new_user_cart.split(",")
@@ -89,7 +91,7 @@ def cart_items_get(request: Request, token: str = Depends(oauth2_scheme)):
 
 
 @app.post("/cart/items")
-def cart_items_get(flower_id: int = Form(...), token: str = Depends(oauth2_scheme), cart: str = Cookie(default="[]")):
+def cart_items_post(flower_id: int = Form(...), token: str = Depends(oauth2_scheme), cart: str = Cookie(default="[]")):
     cart_json = json.loads(cart)
     response = Response('{"msg":"The flower has been successfully added to the basket"}', status_code=200)
     if flower_id:
@@ -101,7 +103,32 @@ def cart_items_get(flower_id: int = Form(...), token: str = Depends(oauth2_schem
     return {"msg": "The flower cannot be found"}
 
 
+@app.post("/purchases")
+def purchases(request: Request, flower_id: str = Form(), token: str = Depends(oauth2_scheme)):
+    user_cart = request.cookies.get(token)
+    flowers = []
+    new_user_cart = user_cart.replace('[', '').replace(']', '')
+    new_user_cart = new_user_cart.split(",")
+    for i in new_user_cart:
+        flower_id = int(i)
+        flowers.append(flower_id)
+    flowers = sorted(flowers)
+
+    if flower_id:
+        purchases_repository.save(Purchase(user_id=decode_access_token(token), flower_id=flower_id))
+
+        for i,f in enumerate(flowers):
+            if f == flower_id:
+                del flowers[i]
+                break
+        response = Response("The flower was successfully paid", status_code=200)
+        new_cart = json.dumps(flowers)
+        response.set_cookie(key=token, value=new_cart)
+        return response
+
+    raise HTTPException(status_code=400, detail=f"Not a valid flower ID: {flower_id}")
 
 
-
-
+@app.get("/purchases")
+def purchases():
+    return purchases_repository.get_all()
