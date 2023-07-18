@@ -19,7 +19,8 @@ class FlowersRepository:
         return self.flowers
 
     def save(self, flower):
-        flower.id = self.get_next_id()
+        if flower.id == 0:
+            flower.id = self.get_next_id()
         self.flowers.append(flower)
 
     def get_next_id(self):

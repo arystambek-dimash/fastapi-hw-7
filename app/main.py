@@ -66,8 +66,7 @@ def flowers_get():
 
 
 @app.post("/flowers")
-def flowers_post(name: str = Form(...), count: int = Form(...), cost: float = Form()):
-    flower = Flower(name=name, cost=cost, count=count)
+def flowers_post(flower:Flower):
     flowers_repository.save(flower)
     return {"flower_id": flower.id}
 
